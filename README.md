@@ -12,7 +12,7 @@ API.
   ✓ octocat           The Octocat       2841     octocat/Hello-World         14203
   · someone           Some One          97       someone/dotfiles            311
 
-  r refresh · F filter · s sort · enter open profile · q quit
+  r: refresh · F: filter · s: sort · o: open profile · q: quit
 ```
 
 ## Install
@@ -32,7 +32,7 @@ gh followers
 | `r` | Refresh from the API and update the cache |
 | `F` | Cycle filter: All → Followed → Not Followed |
 | `s` | Toggle sort: top repo stars ⇄ follower count |
-| `enter` | Open the selected user's profile in a browser |
+| `o` | Open the selected user's profile in a browser |
 | `↑`/`↓`, `pgup`/`pgdn`, `g`/`G` | Move around the table |
 | `q`, `ctrl+c` | Quit |
 
@@ -61,7 +61,7 @@ One `gh api graphql --paginate` call fetches every follower, so there's no auth
 code and no token handling — `gh` is already installed and signed in when it
 runs an extension.
 
-`enter` shells out to `open`, so opening profiles works on macOS only.
+`o` shells out to `open`, so opening profiles works on macOS only.
 
 ## Development
 

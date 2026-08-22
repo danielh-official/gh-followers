@@ -64,7 +64,7 @@ By file:
   value. Any new state mutation must follow the same pattern or the change is
   discarded. `initialModel` takes a `cacheFile` rather than reading one, so no I/O
   happens in the constructor and tests never touch the real cache directory.
-- `enter` reads the login from `m.table.SelectedRow()[1]` — the row's own text,
+- `o` reads the login from `m.table.SelectedRow()[1]` — the row's own text,
   not an index into `m.followers`. That is what makes filtering safe; do not
   "optimize" it into an index lookup.
 - Sort and filter are gated on `len(m.followers) == 0`, not on `m.err`, so both
@@ -88,6 +88,6 @@ so they never read or clobber the developer's own cached followers.
 
 - `// ponytail:` comments mark deliberate simplifications and name the upgrade
   path. Keep them when touching that code; add one when taking a shortcut with a
-  known ceiling (e.g. `enter` uses `open`, so it is macOS-only).
+  known ceiling (e.g. `o` uses `open`, so it is macOS-only).
 - No new dependencies beyond the three charmbracelet ones without a reason the
   stdlib or `gh` itself cannot cover.
