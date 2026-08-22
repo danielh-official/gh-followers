@@ -203,7 +203,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.filter = (m.filter + 1) % numFilters
 			m.refreshRows()
 			return m, nil
-		case "enter":
+		case "o":
 			// The login comes from the row itself, not an index into
 			// m.followers, so filtering cannot desync it. Keep it that way.
 			if row := m.table.SelectedRow(); len(row) > 1 {
@@ -249,7 +249,7 @@ func (m model) View() string {
 		out += errStyle.Render("Refresh failed: "+m.err.Error()) + "\n"
 	}
 	return out + footerStyle.Render(
-		"r refresh · F filter · s sort · enter open profile · q quit") + "\n"
+		"r: refresh · F: filter · s: sort · o: open profile · q: quit") + "\n"
 }
 
 func main() {
