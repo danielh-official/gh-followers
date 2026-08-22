@@ -118,7 +118,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.refreshRows()
 			return m, nil
-		case "enter":
+		case "o":
 			if row := m.table.SelectedRow(); len(row) > 1 {
 				// ponytail: `open` is macOS-only.
 				_ = exec.Command("open", "https://github.com/"+row[1]).Start()
@@ -143,7 +143,7 @@ func (m model) View() string {
 	header := fmt.Sprintf("%d followers · sorted by %s", len(m.followers), m.mode)
 	return "\n" + headerStyle.Render(header) + "\n" +
 		m.table.View() + "\n" +
-		footerStyle.Render("s sort · enter open profile · q quit") + "\n"
+		footerStyle.Render("s: sort · o: open profile · q: quit") + "\n"
 }
 
 func main() {
