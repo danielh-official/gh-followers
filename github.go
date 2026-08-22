@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -106,5 +107,11 @@ func fetch() tea.Msg {
 	if err := json.Unmarshal(out, &pages); err != nil {
 		return errMsg{fmt.Errorf("parsing response: %w", err)}
 	}
-	return loadedMsg{flatten(pages)}
+	fs := flatten(pages)
+	// ponytail: a cache that fails to persist must not fail the fetch that
+	// succeeded, so both errors here are dropped on purpose.
+	if p, err := cachePath(); err == nil {
+		_ = writeCache(p, cacheFile{FetchedAt: time.Now(), Followers: fs})
+	}
+	return loadedMsg{fs}
 }
