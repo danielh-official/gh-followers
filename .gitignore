@@ -1,0 +1,3 @@
+# Built extension binary — gh extension install . symlinks to it locally,
+# and releases build it from CI, so it is never committed.
+/gh-followers
