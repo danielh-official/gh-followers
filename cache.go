@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
@@ -46,6 +47,46 @@ func writeCache(path string, c cacheFile) error {
 		return err
 	}
 	b, err := json.Marshal(c)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, b, 0o644)
+}
+
+// hiddenPath sits beside the cache but in its own file: fetch rewrites the
+// cache wholesale, which would otherwise wipe the user's hidden list.
+func hiddenPath() (string, error) {
+	dir, err := os.UserCacheDir()
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(dir, "gh-followers", "hidden.json"), nil
+}
+
+// readHidden treats every failure as "nothing hidden", like readCache.
+func readHidden(path string) map[string]bool {
+	h := map[string]bool{}
+	if b, err := os.ReadFile(path); err == nil {
+		var logins []string
+		if json.Unmarshal(b, &logins) == nil {
+			for _, l := range logins {
+				h[l] = true
+			}
+		}
+	}
+	return h
+}
+
+func writeHidden(path string, h map[string]bool) error {
+	logins := make([]string, 0, len(h))
+	for l := range h {
+		logins = append(logins, l)
+	}
+	sort.Strings(logins)
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	b, err := json.Marshal(logins)
 	if err != nil {
 		return err
 	}

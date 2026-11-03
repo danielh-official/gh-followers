@@ -87,13 +87,16 @@ var (
 )
 
 type model struct {
-	followers []follower
-	table     table.Model
-	mode      sortMode
-	filter    filterMode
-	fetchedAt time.Time
-	loading   bool
-	err       error
+	followers  []follower
+	table      table.Model
+	mode       sortMode
+	filter     filterMode
+	hidden     map[string]bool // logins hidden by the user
+	hiddenFile string          // "" in tests: nothing is persisted
+	onlyHidden bool            // H: show only hidden instead of only shown
+	fetchedAt  time.Time
+	loading    bool
+	err        error
 }
 
 // initialModel takes the cache rather than reading it, so no I/O happens here
@@ -115,7 +118,7 @@ func initialModel(c cacheFile) model {
 	s.Selected = s.Selected.Bold(true)
 	t.SetStyles(s)
 
-	m := model{table: t}
+	m := model{table: t, hidden: map[string]bool{}}
 	if len(c.Followers) > 0 {
 		m.followers = c.Followers
 		m.fetchedAt = c.FetchedAt
@@ -139,7 +142,7 @@ func (m *model) refreshRows() {
 	sortBy(m.followers, m.mode)
 	rows := make([]table.Row, 0, len(m.followers))
 	for _, f := range m.followers {
-		if !m.filter.matches(f) {
+		if !m.filter.matches(f) || m.hidden[f.Login] != m.onlyHidden {
 			continue
 		}
 		mark := "·"
@@ -203,6 +206,27 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.filter = (m.filter + 1) % numFilters
 			m.refreshRows()
 			return m, nil
+		case "H":
+			m.onlyHidden = !m.onlyHidden
+			m.refreshRows()
+			return m, nil
+		case "h":
+			// Toggles: hides in the main view, unhides in the hidden view.
+			// Login from the row text, same reason as `o`.
+			if row := m.table.SelectedRow(); len(row) > 1 {
+				if m.hidden[row[1]] {
+					delete(m.hidden, row[1])
+				} else {
+					m.hidden[row[1]] = true
+				}
+				if m.hiddenFile != "" {
+					_ = writeHidden(m.hiddenFile, m.hidden)
+				}
+				cur := m.table.Cursor()
+				m.refreshRows()
+				m.table.SetCursor(cur) // stay put so repeated h walks down the list
+			}
+			return m, nil
 		case "o":
 			// The login comes from the row itself, not an index into
 			// m.followers, so filtering cannot desync it. Keep it that way.
@@ -221,8 +245,11 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m model) header() string {
 	s := fmt.Sprintf("%d followers", len(m.followers))
-	if shown := len(m.table.Rows()); m.filter != filterAll {
+	if shown := len(m.table.Rows()); m.filter != filterAll || len(m.hidden) > 0 {
 		s += fmt.Sprintf(" · %d shown", shown)
+	}
+	if m.onlyHidden {
+		s += " · only hidden"
 	}
 	s += fmt.Sprintf(" · sorted by %s · %s", m.mode, m.filter)
 	switch {
@@ -249,7 +276,7 @@ func (m model) View() string {
 		out += errStyle.Render("Refresh failed: "+m.err.Error()) + "\n"
 	}
 	return out + footerStyle.Render(
-		"r: refresh · F: filter · s: sort · o: open profile · q: quit") + "\n"
+		"r: refresh · F: filter · h: hide · H: only hidden · s: sort · o: open profile · q: quit") + "\n"
 }
 
 func main() {
@@ -257,7 +284,13 @@ func main() {
 	if p, err := cachePath(); err == nil {
 		c, _ = readCache(p)
 	}
-	if _, err := tea.NewProgram(initialModel(c), tea.WithAltScreen()).Run(); err != nil {
+	m := initialModel(c)
+	if p, err := hiddenPath(); err == nil {
+		m.hiddenFile = p
+		m.hidden = readHidden(p)
+		m.refreshRows()
+	}
+	if _, err := tea.NewProgram(m, tea.WithAltScreen()).Run(); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}

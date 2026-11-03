@@ -229,3 +229,26 @@ func TestWarmStartSkipsFetch(t *testing.T) {
 		t.Error("cold start issued no command; it must fetch")
 	}
 }
+
+func TestHideAndOnlyHidden(t *testing.T) {
+	m := modelFromFixture(t)
+	all := len(m.table.Rows())
+	login := m.table.SelectedRow()[1]
+
+	tm, _ := m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("h")})
+	m = tm.(model)
+	if len(m.table.Rows()) != all-1 {
+		t.Fatalf("h should hide one row, got %d of %d", len(m.table.Rows()), all)
+	}
+
+	tm, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("H")})
+	m = tm.(model)
+	if rows := m.table.Rows(); len(rows) != 1 || rows[0][1] != login {
+		t.Fatalf("H should show only %s, got %v", login, rows)
+	}
+
+	tm, _ = m.Update(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("H")})
+	if len(tm.(model).table.Rows()) != all-1 {
+		t.Fatal("second H should return to the main view")
+	}
+}

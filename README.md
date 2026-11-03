@@ -12,7 +12,7 @@ API.
   ✓ octocat           The Octocat       2841     octocat/Hello-World         14203
   · someone           Some One          97       someone/dotfiles            311
 
-  r: refresh · F: filter · s: sort · o: open profile · q: quit
+  r: refresh · F: filter · h: hide · H: only hidden · s: sort · o: open profile · q: quit
 ```
 
 ## Install
@@ -31,6 +31,8 @@ gh followers
 | --- | --- |
 | `r` | Refresh from the API and update the cache |
 | `F` | Cycle filter: All → Followed → Not Followed |
+| `h` | Hide the selected follower (unhide, in the only-hidden view) |
+| `H` | Toggle between shown followers and only hidden ones |
 | `s` | Toggle sort: top repo stars ⇄ follower count |
 | `o` | Open the selected user's profile in a browser |
 | `↑`/`↓`, `pgup`/`pgdn`, `g`/`G` | Move around the table |
